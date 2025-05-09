@@ -1,18 +1,24 @@
 <script setup>
-import FlashCard from './components/FlashCard.vue'
-import Authenticate from './components/authenticate.vue';
-import Questionnaire from './components/Questionnaire.vue';
+import { useAuthStore } from './stores/auth';
+import { computed } from 'vue';
+
+const authStore = useAuthStore();
+const displayText = computed(() => authStore.username || 'Login');
+
 </script>
 
 <template>
   <div class="nav">
     <h1>STUDY PAL</h1>
-    <Authenticate/>
+    <router-link v-if="!authStore.username" :to="{ name: 'Authenticate' }" class="login">
+      {{ displayText }}
+    </router-link> 
+    <span v-else class="username">
+      {{ authStore.username }}
+      <button @click="authStore.logout" class="logout">Logout</button>
+    </span>
   </div>
-  <FlashCard/>
-  <Questionnaire/>
-  <button class="upload">Upload File &plus;</button>
-
+  <router-view></router-view>
 
 </template>
 
@@ -23,18 +29,42 @@ h1{
   text-align: left;
 }
 
-.upload{
-  /* margin-left: -400px; */
-  color: #FDFCFE;
-  background-color: #1D1E26;
-  border: none;
-  float: left;
-  margin-top: -420px;
-  margin-left: 40px;
-  font-size: 1.4rem;
-  border-radius: 50px;
-  height: 30px;
+.login {
+    background-color: #8965A3;
+    width: 90px;
+    height: 40px;
+    border-radius: 50px;
+    margin-top: -62px;
+    margin-right: 25px;
+    float: right;
+    color: #FDFCFE;
+    font-size: 1.3rem;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
 }
 
+.username {
+  
+  margin-top: -62px;
+  margin-right: 25px;
+  float: right;
+  color: #FDFCFE;
+  font-size: 1.3rem;
+}
+
+.logout {
+  background-color: #8965A3;
+  width: 90px;
+  height: 40px;
+  border-radius: 50px;
+  color: #FDFCFE;
+  font-size: 1.3rem;
+  border: none;
+  margin-left: 10px;
+}
 
 </style>
