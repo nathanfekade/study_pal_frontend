@@ -4,10 +4,19 @@ import './style.css';
 import App from './App.vue';
 import router from  './router';
 import axios from 'axios';
+import { useAuthStore } from './stores/auth';
 
-axios.defaults.baseURL = 'https://nathanfekade.pythonanywhere.com';
+axios.defaults.baseURL = (`${import.meta.env.VITE_APP_API_URL}`);
 
 const app = createApp(App);
 app.use(createPinia());
 app.use(router);
-app.mount('#app')
+
+router.isReady().then(() => {
+    const authStore = useAuthStore();
+    if (authStore.token){
+        axios.defaults.headers.common['Authorization'] = `Token ${authStore.token}`;
+    }
+    app.mount('#app')
+});
+

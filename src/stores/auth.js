@@ -1,11 +1,13 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import axios from "axios";
 import authService from "../api/authService";
 
 export const useAuthStore = defineStore('auth', () => {
     const token = ref(localStorage.getItem('token') || null);
     const username = ref(localStorage.getItem('username') || null);
+
+    const isAuthenticated = computed(() => !!token.value);
 
     const login = async (credentials) =>{
         try {
@@ -53,7 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
         delete axios.defaults.headers.common['Authorization']
     };
 
-    return { token, username, login, signup, logout};
+    return { token, username, isAuthenticated , login, signup, logout};
 
 });
 

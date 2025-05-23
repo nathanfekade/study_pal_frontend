@@ -1,9 +1,16 @@
 <script setup>
 import { useAuthStore } from './stores/auth';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
+const router = useRouter();
 const displayText = computed(() => authStore.username || 'Login');
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push({ name: 'Authenticate'});
+};
 
 </script>
 
@@ -15,7 +22,7 @@ const displayText = computed(() => authStore.username || 'Login');
     </router-link> 
     <span v-else class="username">
       {{ authStore.username }}
-      <button @click="authStore.logout" class="logout">Logout</button>
+      <button @click="handleLogout" class="logout">Logout</button>
     </span>
   </div>
   <router-view></router-view>

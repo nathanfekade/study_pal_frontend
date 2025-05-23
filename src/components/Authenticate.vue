@@ -1,10 +1,11 @@
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const isLogin = ref(true);
 const username = ref('');
 const password = ref('');
@@ -18,7 +19,8 @@ const submit = async () => {
         } else {
             await authStore.signup(credentials);
         }
-        router.push({ name: 'Home'});
+        const redirectPath = route.query.redirect || { name: 'Home'};
+        router.push(redirectPath);
     } catch (err){
         error.value = isLogin.value? 'Login failed. Check credentials.' : 'Signup failed';
     }
@@ -32,72 +34,111 @@ const  toggleMode = () => {
 </script>
 
 <template>
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <h2>{{ isLogin? 'Login' : 'Sign Up' }}</h2>
+            <div class="form">
+                <input v-model="username" placeholder="Username"/>
+                <input v-model="password" type="password" placeholder="Password">
+                <button @click="submit">{{ isLogin? 'Login' : 'Sign Up' }}</button>
+                <p v-if="error" class="error">{{ error }}</p>
+                <p>
+                    {{ isLogin ? 'Need an account?' : 'Already have an account?'}}
+                    <a href="#" @click.prevent="toggleMode">{{ isLogin? 'Sign Up' : 'Login' }}</a>
+                </p>
 
-<div class="auth-container">
-    <h2>{{ isLogin? 'Login' : 'Sign Up' }}</h2>
-    <div class="form">
-        <input v-model="username" placeholder="Username"/>
-        <input v-model="password" type="password" placeholder="Password">
-        <button @click="submit">{{ isLogin? 'Login' : 'Sign Up' }}</button>
-        <p v-if="error" class="error">{{ error }}</p>
-        <p>
-            {{ isLogin ? 'Need an account?' : 'Already have an account?'
-             }}
-             <a href="#" @click.prevent="toggleMode">{{ isLogin? 'Sign Up' : 'Login' }}</a>
-        </p>
-
+            </div>
+        </div>
     </div>
-</div>
-
 </template>
 
 <style scoped>
-.auth-container {
+
+.auth-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #1D1E26;
-    color: #fdfcfe;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
+.auth-container {
+    background-color: #2a2c36;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    max-width: 400px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #fdfcfe;
+    text-align: center;
+}
+
+h2{
+    margin-bottom: 25px;
+    font-size: 2em;
 }
 
 .form{
     display: flex;
     flex-direction: column;
     gap: 15px;
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
 }
 
 input{
-    padding: 10px;
+    padding: 12px;
     border-radius: 5px;
-    border: none;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #fdfcfe;
     font-size: 1rem;
+}
+
+input::placeholder{
+    color: #bbb;
 }
 
 button{
     background-color: #8965A3;
-    padding: 10PX;
+    padding: 12PX;
     border-radius: 50PX;
     border: none;
     color: #fdfcfe;
     font-size: 1.3rem;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #724c90;
 }
 
 .error {
-    color: red;
+    color: #ff6b6b;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+p{
+    margin-top: 20px;
 }
 
 a{
     color: #8965A3;
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 a:hover {
     text-decoration: underline;
+    color: #a37bc7;
 }
 
 </style>
