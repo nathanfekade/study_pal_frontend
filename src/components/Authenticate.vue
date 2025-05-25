@@ -8,6 +8,7 @@ const router = useRouter();
 const route = useRoute();
 const isLogin = ref(true);
 const username = ref('');
+const email = ref('');
 const password = ref('');
 const error = ref('');
 
@@ -17,7 +18,8 @@ const submit = async () => {
         if (isLogin.value){
             await authStore.login(credentials);
         } else {
-            await authStore.signup(credentials);
+            const credentialsnew = { username: username.value, password: password.value, email: email.value };
+            await authStore.signup(credentialsnew);
         }
         const redirectPath = route.query.redirect || { name: 'Home'};
         router.push(redirectPath);
@@ -38,6 +40,7 @@ const  toggleMode = () => {
         <div class="auth-container">
             <h2>{{ isLogin? 'Login' : 'Sign Up' }}</h2>
             <div class="form">
+                <input v-if="!isLogin" v-model="email" placeholder="Email">
                 <input v-model="username" placeholder="Username"/>
                 <input v-model="password" type="password" placeholder="Password">
                 <button @click="submit">{{ isLogin? 'Login' : 'Sign Up' }}</button>
