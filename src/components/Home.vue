@@ -6,6 +6,7 @@ import questionnaireService from '../api/questionnaireService';
 
 const authStore = useAuthStore();
 const title = ref('')
+const titleCopy = ref('')
 const pdfFile = ref(null);
 const message = ref('');
 const showModal = ref(false);
@@ -125,9 +126,11 @@ const handleUpload = async () => {
         message.value = 'Please provide both a title and a PDF file.';
         return;
       }
-
+  
+  title.value = title.value.replaceAll(" ", '_')
+  titleCopy.value = title.value + Date.now().toString(36) + Math.random().toString(36).slice(2);
   const formData = new FormData();
-  formData.append('title', title.value);
+  formData.append('title', titleCopy.value);
   formData.append('file', pdfFile.value);
 
   try{
@@ -187,7 +190,7 @@ const handleUpload = async () => {
         <p v-if="error" class="error"> {{ error }}</p>
         <div v-if="questionnaires.length" class="questionnaire-list">
           <div v-for="questionnaire in questionnaires" :key="questionnaire.id" class="questionnaire-item" @click="fetchQuestionnaireText(questionnaire.id)">
-            <h4>{{ questionnaire.question_answers_file.slice(17).slice(0,-4) }}</h4>
+            <h4>{{ questionnaire.question_answers_file.slice(17).slice(0,-32) }}</h4>
           </div>
         </div>
         <p v-else-if="!error" class="no-questionnaires">No questionairres available.</p>
@@ -373,6 +376,9 @@ p{
 .questionnaire-item h4 {
   margin:  0;
   font-size: 1.2rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .no-questionnaires {
