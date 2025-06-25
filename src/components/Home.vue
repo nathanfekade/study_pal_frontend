@@ -11,8 +11,8 @@ const pdfFile = ref(null);
 const message = ref('');
 const showModal = ref(false);
 const selectedFileName = ref('');
-const questionnaires= ref([]);
-const error  = ref('');
+const questionnaires = ref([]);
+const error = ref('');
 const selectedText = ref('');
 let questionnaireDict = reactive({});
 let currentIndex = ref(0);
@@ -20,92 +20,97 @@ let currentKey = ref('')
 let currentValue = ref('')
 let keys = ref(Object.keys(questionnaireDict));
 const answer = ref(true);
+const showMenu = ref(false);
 
-function changeAnswer(){
-    answer.value = !answer.value;
+const toggleMenu = () => {
+  showMenu.value = !showMenu.value;
+};
+
+function changeAnswer() {
+  answer.value = !answer.value;
+}
+
+function displayCurrentItem() {
+  if (keys.value.length === 0) {
+    return;
   }
+  currentKey.value = keys.value[currentIndex.value];
+  currentValue.value = questionnaireDict[currentKey.value];
+}
 
-function displayCurrentItem(){
-    if (keys.value.length === 0){
-      return;
-    }
-    currentKey.value = keys.value[currentIndex.value];
-    currentValue.value = questionnaireDict[currentKey.value];
+function showNextItem() {
+  if (keys.value.length === 0) {
+    return;
   }
-
-  function showNextItem(){
-    if (keys.value.length === 0){
-      return;
-    }
-    if (currentIndex.value >= keys.value.length-1){
-      currentIndex.value = 0;
-    }else{
-      currentIndex.value++;
-    }
-    answer.value = true;
-    displayCurrentItem();
+  if (currentIndex.value >= keys.value.length - 1) {
+    currentIndex.value = 0;
+  } else {
+    currentIndex.value++;
   }
+  answer.value = true;
+  displayCurrentItem();
+}
 
-  function showPreviousItem(){
-    if (keys.value.length === 0){
-      return;
-    }
-    if (currentIndex.value <= 0){
-      currentIndex.value = keys.value.length - 1;
-    }else{
-      currentIndex.value --;
-    }
-    answer.value = true;
-    displayCurrentItem();
+function showPreviousItem() {
+  if (keys.value.length === 0) {
+    return;
   }
+  if (currentIndex.value <= 0) {
+    currentIndex.value = keys.value.length - 1;
+  } else {
+    currentIndex.value--;
+  }
+  answer.value = true;
+  displayCurrentItem();
+}
 
-const questionairreList = (async () =>{
-  
-  if(!authStore.username) {
+const questionairreList = (async () => {
+
+  if (!authStore.username) {
     error.value = 'Please log in to view questionnaires.';
     return;
   }
-  
+
   try {
-      const response = await questionnaireService.getallquestionairre();
-      questionnaires.value = response.data;
-    } catch (err) {
-      error.value = err.response?.status === 401 ? 'Please log in to view questionnaires generated.' : 'Failed to load questionairres. Please reload the page';
-    } 
- 
-  });
-
-onMounted( () =>{
-  
-  questionairreList();
-  });
-
-  const fetchQuestionnaireText = async (id) => {
-    try {
-
-      const response = await questionnaireService.getquestionairre(id);
-      selectedText.value = response.data;
-      questionnaireDict = {};
-      const lines = selectedText.value.split('\n').filter(line => line.trim() !== '')
-
-      lines.forEach(line => {
-        let [question, answer] = line.split(';').map(part => part.trim());
-        if (question && answer) {
-          question = question.replaceAll("<br>", '\n');
-          answer = answer.replaceAll("<br>", '\n');
-
-          questionnaireDict[question] = answer;
-        }
-      });
-      currentIndex.value = 0;
-      keys.value = Object.keys(questionnaireDict);
-
-      answer.value = true;
-      displayCurrentItem()
-    } catch (err){
-      error.value = err.response?.status === 401 ? 'Please log in to view questionnaire text.' : 'Failed to load questionnare text. Please try again.'
-    }
+    const response = await questionnaireService.getallquestionairre();
+    questionnaires.value = response.data;
+  } catch (err) {
+    error.value = err.response?.status === 401 ? 'Please log in to view questionnaires generated.' : 'Failed to load questionairres. Please reload the page';
   }
+
+});
+
+onMounted(() => {
+
+  questionairreList();
+});
+
+const fetchQuestionnaireText = async (id) => {
+  try {
+
+    const response = await questionnaireService.getquestionairre(id);
+    selectedText.value = response.data;
+    questionnaireDict = {};
+    const lines = selectedText.value.split('\n').filter(line => line.trim() !== '')
+
+    lines.forEach(line => {
+      let [question, answer] = line.split(';').map(part => part.trim());
+      if (question && answer) {
+        question = question.replaceAll("<br>", '\n');
+        answer = answer.replaceAll("<br>", '\n');
+
+        questionnaireDict[question] = answer;
+      }
+    });
+    currentIndex.value = 0;
+    keys.value = Object.keys(questionnaireDict);
+
+    answer.value = true;
+    displayCurrentItem()
+  } catch (err) {
+    error.value = err.response?.status === 401 ? 'Please log in to view questionnaire text.' : 'Failed to load questionnare text. Please try again.'
+  }
+}
 
 const openModal = () => {
   showModal.value = true;
@@ -122,18 +127,18 @@ const closeModal = () => {
 
 const handleUpload = async () => {
 
-  if (!title.value || !pdfFile.value){
-        message.value = 'Please provide both a title and a PDF file.';
-        return;
-      }
-  
+  if (!title.value || !pdfFile.value) {
+    message.value = 'Please provide both a title and a PDF file.';
+    return;
+  }
+
   title.value = title.value.replaceAll(" ", '_')
   titleCopy.value = title.value + Date.now().toString(36) + Math.random().toString(36).slice(2);
   const formData = new FormData();
   formData.append('title', titleCopy.value);
   formData.append('file', pdfFile.value);
 
-  try{
+  try {
     const response = await bookService.uploadBook(formData);
     message.value = 'Generating questions please wait a moment!';
 
@@ -145,10 +150,6 @@ const handleUpload = async () => {
     const response2 = await questionnaireService.generateQuestionairre(questionairreFormData);
     questionairreList();
     fetchQuestionnaireText(response2.data.id);
-
-
-
-
     setTimeout(() => {
       closeModal();
     }, 1500);
@@ -158,87 +159,124 @@ const handleUpload = async () => {
   }
 };
 
-  const handleFileChange = (event) => {
-    pdfFile.value = event.target.files[0];
-    selectedFileName.value = pdfFile.value ? pdfFile.value.name : '';
-  };
+const handleFileChange = (event) => {
+  pdfFile.value = event.target.files[0];
+  selectedFileName.value = pdfFile.value ? pdfFile.value.name : '';
+};
 
 
 
-  
+
 
 </script>
 
 <template>
-    
-    <div class="content-wrapper">
-        <div class="box">
-          <div class="card">
-            <p v-if="currentKey===''" class="question">Question will be shown here. First generate a question or Choose from your already generated list</p>
-            <p v-else class="question">{{ answer? currentKey : currentValue  }}</p>
-            <button @click="changeAnswer" id="answer">{{ answer? 'Answer' : 'Question' }}</button>
-          </div>
-          <button @click="showPreviousItem" id="previous">
-            <p>&larr; Previous</p>
-          </button>
 
-          <button @click="showNextItem()" id="next">
-            <p>Next &rarr;</p>
-          </button>
-        </div>
+  <div class="content-wrapper">
 
-        <p v-if="error" class="error"> {{ error }}</p>
-        <div v-if="questionnaires.length" class="questionnaire-list">
-          <div v-for="questionnaire in questionnaires" :key="questionnaire.id" class="questionnaire-item" @click="fetchQuestionnaireText(questionnaire.id)">
-            <h4>{{ questionnaire.question_answers_file.slice(17).slice(0,-32) }}</h4>
-          </div>
-        </div>
-        <p v-else-if="!error" class="no-questionnaires">No questionairres available.</p>
+    <div class="upload-section">
+
+      <div class="style-hamburger">
+        <button class="hamburger" @click="toggleMenu">☰</button>
       </div>
-        
-        <div class="upload-section">
-            <button  @click="openModal" class="upload">Generate Question</button>
+      <div class="menu-content" :class="{ 'show-menu': showMenu }">
+        <div class="gen-quiz">
+          <button @click="openModal" class="upload">Generate Question</button>
         </div>
-        
-            <div v-if="showModal" class="modal-overlay">
-            <div class="modal-content">
-              <h3>Upload a Pdf file</h3>
-              <input v-model="title" placeholder="Questionnaire Title" class="title-input"/>
-              <div class="input-row">
-                <input type="file" accept=".pdf, application/pdf" @change="handleFileChange" class="file-input"/>
-                <span class="file-name">{{ selectedFileName }}</span>
-              </div>
-              <div class="modal-buttons">
-                <button @click="handleUpload" class="upload-confirm" :disabled="!pdfFile">Generate Questions</button>
-                <button @click="closeModal" class="cancel-button">Cancel</button>
-              </div>
-              <p v-if="message" :class="{ 'success': !message.includes('failed'), 'error': message.includes('failed')}">{{ message }}
-              </p>
-            </div>
+
+        <div v-if="questionnaires.length" class="questionnaire-list">
+          <div v-for="questionnaire in questionnaires" :key="questionnaire.id" class="questionnaire-item"
+            @click="fetchQuestionnaireText(questionnaire.id)">
+            <h4>{{ questionnaire.question_answers_file.slice(17).slice(0, -32) }}</h4>
+          </div>
+
         </div>
+
+      </div>
+
+
+    </div>
+
+    <div class="box" :class="{ 'show-card': showMenu }">
+      <div class="card">
+        <p v-if="currentKey === ''" class="question">Question will be shown here. First generate a question or Choose
+          from
+          your already generated list</p>
+        <p v-else class="question">{{ answer ? currentKey : currentValue }}</p>
+        <button @click="changeAnswer" id="answer">{{ answer ? 'Answer' : 'Question' }}</button>
+      </div>
+      <div class="change">
+
+        <button @click="showPreviousItem" class="previous">
+          <p>&larr; Previous</p>
+        </button>
+
+        <button @click="showNextItem()" class="next">
+          <p>Next &rarr;</p>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div v-if="showModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Upload a Pdf file</h3>
+      <input v-model="title" placeholder="Questionnaire Title" class="title-input" />
+      <div class="input-row">
+        <input type="file" accept=".pdf, application/pdf" @change="handleFileChange" class="file-input" />
+        <span class="file-name">{{ selectedFileName }}</span>
+      </div>
+      <div class="modal-buttons">
+        <button @click="handleUpload" class="upload-confirm" :disabled="!pdfFile">Generate Questions</button>
+        <button @click="closeModal" class="cancel-button">Cancel</button>
+      </div>
+      <p v-if="message" :class="{ 'success': !message.includes('failed'), 'error': message.includes('failed') }">{{
+        message }}
+      </p>
+    </div>
+  </div>
 
 </template>
 
 <style scoped>
+.content-wrapper {
+  display: flex;
+  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
 
 .upload-section {
-  position: fixed;
-  top: 90px;
-  left: 20px;
-  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  flex: 0.7;
+}
 
+.questionnaire-list {
+  max-height: 400px;
+  overflow-y: auto;
+  width: 80%;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 0.5;
 }
 
 
-.upload{
+.upload {
   color: #FDFCFE;
   background-color: #8965A3;
   border: none;
   font-size: 1.2rem;
   border-radius: 50px;
   cursor: pointer;
-  width: 200px;
-  height: 40px;
+
 }
 
 .modal-overlay {
@@ -258,7 +296,8 @@ const handleUpload = async () => {
   background-color: #1D1E26;
   padding: 20px;
   border-radius: 10px;
-  width: 300px;
+  width: 90vw;
+  max-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -277,7 +316,8 @@ const handleUpload = async () => {
   gap: 10px;
 }
 
-.title-input, .file-input {
+.title-input,
+.file-input {
   padding: 5px;
   border-radius: 5px;
   border: none;
@@ -302,10 +342,11 @@ const handleUpload = async () => {
   gap: 10px;
 }
 
-.upload-confirm, .cancel-button {
+.upload-confirm,
+.cancel-button {
   color: #FDFCFE;
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   border-radius: 50px;
   height: 30px;
   padding: 0 15px;
@@ -325,7 +366,7 @@ const handleUpload = async () => {
   background-color: #555;
 }
 
-p{
+p {
   margin: 10px 0 0;
   text-align: center;
 }
@@ -340,30 +381,6 @@ p{
   margin-top: 20px;
 }
 
-.content-wrapper {
-  position: relative;
-  top: 0;
-  left: 0;
-  width: 100%;
-  max-height: calc(100vh-100px);
-  overflow-y: auto;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.questionnaire-list{
-  position: absolute;
-  top: 40px;
-  left: -20px;
-  width: 300px;
-  max-height: 400px;
-  overflow-y: auto;
-  margin-top: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
 
 .questionnaire-item {
   background-color: #1D1E26;
@@ -371,10 +388,11 @@ p{
   border-radius: 10px;
   color: #FDFCFE;
   cursor: pointer;
+  max-width: 12rem;
 }
 
 .questionnaire-item h4 {
-  margin:  0;
+  margin: 0;
   font-size: 1.2rem;
   overflow: hidden;
   white-space: nowrap;
@@ -387,9 +405,16 @@ p{
   margin-top: 20px;
 }
 
-#previous{
+.change {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.previous {
   background-color: #1D1E26;
-  width: 100px;
+  padding: 0px 10px 5px 10px;
   height: 40px;
   margin-top: 10px;
   margin-left: 0px;
@@ -400,53 +425,59 @@ p{
 
 }
 
-#previous p{
+.previous p {
   display: inline-block;
+  text-align: center;
   font-size: 1rem;
-  margin-top:10% ;
+  margin-top: 10%;
 }
 
-#next{
+.next {
   background-color: #1D1E26;
-  width: 100px;
+  padding: 0px 10px 5px 10px;
+  max-width: 100px;
   height: 40px;
   margin-top: 10px;
-  margin-left: 200px;
   color: #8E929D;
   border-radius: 50px;
   border-style: solid;
   border: none;
 }
 
-#next p{
+.next p {
   display: inline-block;
+  text-align: center;
   font-size: 1rem;
-  margin-top:10% ;
+  margin-top: 10%;
 }
 
-.box{
-  /* background-color: red; */
-  width: 580px;
-  height: 440px;
-  margin-left: 300px;
+.box {
+  flex: 2;
+  justify-content: center;
+  height: auto;
   margin-top: 50px;
-}
-.card{
-    width: 380px;
-    height: 310px;
-    padding: 20px;
-    background-color: #222226;
-    color: #FDFCFE;
-    border-radius: 50px;
-    margin-left: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
 }
 
-.question{
-  margin-top: 20px;
+.card {
+  max-width: 420px;
+  height: 310px;
+  background-color: #222226;
+  color: #FDFCFE;
+  border-radius: 50px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.question {
+  margin-top: 30px;
+  margin-left: 10px;
+  margin-right: 10px;
   font-size: 1.5rem;
   max-height: 200px;
   overflow-y: auto;
@@ -456,11 +487,12 @@ p{
   flex: 1;
 }
 
-#answer{
+#answer {
   background-color: #8965A3;
   color: #FDFCFE;
+  padding: 0px 15px;
   border-radius: 50px;
-  width: 120px;
+  max-width: 120px;
   height: 45px;
   font-size: 1.1rem;
   border: none;
@@ -470,5 +502,81 @@ p{
   transform: translateX(-50%);
 }
 
-</style>
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
 
+@media (max-width: 768px) {
+  .content-wrapper {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+  }
+
+  .left {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+  }
+
+  .style-hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+  }
+
+  .hamburger {
+    text-align: left;
+
+  }
+
+  .upload-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+  }
+
+  .menu-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    align-items: end;
+    text-align: start;
+  }
+
+  .menu-content {
+    display: none;
+    z-index: 2;
+  }
+
+  .show-card {
+    display: none;
+  }
+
+  .show-menu {
+    display: flex;
+  }
+}
+</style>
