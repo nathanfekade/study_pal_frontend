@@ -230,7 +230,7 @@ const handleFileChange = (event) => {
         <span class="file-name">{{ selectedFileName }}</span>
       </div>
       <div class="modal-buttons">
-        <button @click="handleUpload" class="upload-confirm" :disabled="!pdfFile">Generate Questions</button>
+        <button @click="handleUpload" class="upload-confirm" :disabled="!pdfFile">Generate Quiz</button>
         <button @click="closeModal" class="cancel-button">Cancel</button>
       </div>
       <p v-if="message" :class="{ 'success': !message.includes('failed'), 'error': message.includes('failed') }">{{
@@ -255,6 +255,12 @@ const handleFileChange = (event) => {
   display: flex;
   flex-direction: column;
   flex: 0.7;
+  align-self: flex-start;
+}
+
+.gen-quiz {
+  display: flex;
+ 
 }
 
 .questionnaire-list {
@@ -276,6 +282,8 @@ const handleFileChange = (event) => {
   font-size: 1.2rem;
   border-radius: 50px;
   cursor: pointer;
+  text-align: center;
+  padding: 0.4rem 0.3rem;
 
 }
 
